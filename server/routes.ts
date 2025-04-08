@@ -18,9 +18,36 @@ const validateRequest = (req: Request, schema: any) => {
     console.log("Validating with schema:", schema);
     console.log("Request body before validation:", req.body);
     
-    // We don't need to pre-process data anymore - our schema handles conversions directly
-    // Simply pass the raw request body to the schema for validation
-    const validatedData = schema.parse(req.body);
+    // Special handling for date fields to make them compatible with PostgreSQL
+    const body = { ...req.body };
+    
+    // Convert date strings to proper PostgreSQL timestamp format
+    if (body.date && typeof body.date === 'string') {
+      // Ensure the date is in YYYY-MM-DD format for PostgreSQL
+      const dateParts = body.date.split('-');
+      if (dateParts.length === 3) {
+        const year = parseInt(dateParts[0]);
+        const month = parseInt(dateParts[1]) - 1; // JS months are 0-based
+        const day = parseInt(dateParts[2]);
+        const dateObj = new Date(year, month, day);
+        body.date = dateObj.toISOString();
+      }
+    }
+    
+    // Same for targetDate field in goals
+    if (body.targetDate && typeof body.targetDate === 'string') {
+      const dateParts = body.targetDate.split('-');
+      if (dateParts.length === 3) {
+        const year = parseInt(dateParts[0]);
+        const month = parseInt(dateParts[1]) - 1; // JS months are 0-based
+        const day = parseInt(dateParts[2]);
+        const dateObj = new Date(year, month, day);
+        body.targetDate = dateObj.toISOString();
+      }
+    }
+    
+    // Now validate with the schema
+    const validatedData = schema.parse(body);
     console.log("Validation successful:", validatedData);
     return { data: validatedData, error: null };
   } catch (error) {
@@ -174,17 +201,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log("Received nutrition data:", req.body);
     
     try {
+      console.log("Starting nutrition validation process");
       const { data, error } = validateRequest(req, insertNutritionEntrySchema);
       
       if (error) {
         console.error("Validation error:", error);
+        console.error("Original request body:", JSON.stringify(req.body));
         return res.status(400).json({ message: error });
       }
       
-      console.log("Validated nutrition data:", data);
-      const entry = await storage.createNutritionEntry(data);
-      console.log("Created nutrition entry:", entry);
-      return res.status(201).json(entry);
+      console.log("Validated nutrition data:", JSON.stringify(data));
+      
+      try {
+        const entry = await storage.createNutritionEntry(data);
+        console.log("Created nutrition entry:", JSON.stringify(entry));
+        return res.status(201).json(entry);
+      } catch (storageError) {
+        console.error("Error in storage.createNutritionEntry:", storageError);
+        return res.status(500).json({ message: storageError instanceof Error ? storageError.message : "Unknown storage error" });
+      }
     } catch (err) {
       console.error("Error in nutrition POST endpoint:", err);
       return res.status(500).json({ message: err instanceof Error ? err.message : "Unknown error" });

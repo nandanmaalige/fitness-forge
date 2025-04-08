@@ -51,14 +51,15 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Extend the nutrition schema with validation rules
-const nutritionFormSchema = insertNutritionEntrySchema.extend({
-  // Only use string for date fields - simpler
+// Create a new nutrition form schema from scratch
+const nutritionFormSchema = z.object({
+  userId: z.number(),
   date: z.string(),
   calories: z.coerce.number().min(1, "Calories must be at least 1"),
   protein: z.coerce.number().transform(val => val?.toString()).optional(),
   carbs: z.coerce.number().transform(val => val?.toString()).optional(),
   fat: z.coerce.number().transform(val => val?.toString()).optional(),
+  notes: z.string().optional(),
 });
 
 type NutritionFormData = z.infer<typeof nutritionFormSchema>;

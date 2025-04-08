@@ -42,13 +42,16 @@ import { format } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Extend goal schema with validation rules
-const goalFormSchema = insertGoalSchema.extend({
-  targetDate: z.coerce.date(),
+// Create new goal form schema with validation rules
+const goalFormSchema = z.object({
+  userId: z.number(),
   name: z.string().min(3, "Goal name must be at least 3 characters"),
   description: z.string().min(5, "Please provide a brief description"),
+  targetDate: z.any(), // Handle both date objects and strings
   currentValue: z.coerce.number(),
   targetValue: z.coerce.number().min(0.1, "Target value must be greater than 0"),
+  unit: z.string(),
+  status: z.string(),
 });
 
 type GoalFormData = z.infer<typeof goalFormSchema>;
@@ -69,7 +72,7 @@ export default function GoalForm({ userId }: GoalFormProps) {
       userId,
       name: "",
       description: "",
-      targetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+      targetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now as YYYY-MM-DD
       currentValue: 0,
       targetValue: 0,
       unit: "lbs",
@@ -80,10 +83,12 @@ export default function GoalForm({ userId }: GoalFormProps) {
   // Handle goal submission
   const createGoalMutation = useMutation({
     mutationFn: async (data: GoalFormData) => {
-      // Format the target date as ISO string to ensure proper serialization
+      // Make sure targetDate is passed as a string
       const formattedData = {
         ...data,
-        targetDate: data.targetDate.toISOString(),
+        targetDate: typeof data.targetDate === 'string' ? 
+          data.targetDate : 
+          new Date(data.targetDate).toISOString().split('T')[0],
       };
       
       const response = await apiRequest("POST", "/api/goals", formattedData);
@@ -155,38 +160,22 @@ export default function GoalForm({ userId }: GoalFormProps) {
                 control={form.control}
                 name="targetDate"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Target Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={`w-full pl-3 text-left font-normal ${
-                              !field.value && "text-muted-foreground"
-                            }`}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                          disabled={(date) => date < new Date()}
-                        />
-                      </PopoverContent>
-                    </Popover>
+                  <FormItem>
+                    <FormLabel>Target Date (YYYY-MM-DD)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="text" 
+                        placeholder="YYYY-MM-DD" 
+                        value={typeof field.value === 'object' ? 
+                          new Date(field.value).toISOString().split('T')[0] :
+                          String(field.value)}
+                        onChange={(e) => {
+                          field.onChange(e.target.value);
+                        }}
+                      />
+                    </FormControl>
                     <FormDescription>
-                      When do you want to achieve this goal?
+                      When do you want to achieve this goal? Format: YYYY-MM-DD
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

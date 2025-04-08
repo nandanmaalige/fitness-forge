@@ -86,7 +86,7 @@ export const goals = pgTable("goals", {
   status: text("status").notNull(), // in-progress, completed, abandoned
 });
 
-// No special date handling for goals
+// Add date conversion for goals
 export const insertGoalSchema = createInsertSchema(goals)
   .pick({
     userId: true,
@@ -97,6 +97,13 @@ export const insertGoalSchema = createInsertSchema(goals)
     targetValue: true,
     unit: true,
     status: true,
+  })
+  .transform((data) => {
+    // Convert targetDate string to Date object if it's a string
+    if (data.targetDate && typeof data.targetDate === 'string') {
+      data.targetDate = new Date(data.targetDate);
+    }
+    return data;
   });
 
 // Nutrition schema
@@ -111,7 +118,7 @@ export const nutritionEntries = pgTable("nutrition_entries", {
   notes: text("notes"),
 });
 
-// Create base schema without special date handling
+// Create base schema with date conversion
 export const insertNutritionEntrySchema = createInsertSchema(nutritionEntries)
   .pick({
     userId: true,
@@ -121,6 +128,13 @@ export const insertNutritionEntrySchema = createInsertSchema(nutritionEntries)
     carbs: true,
     fat: true,
     notes: true,
+  })
+  .transform((data) => {
+    // Convert date string to Date object if it's a string
+    if (data.date && typeof data.date === 'string') {
+      data.date = new Date(data.date);
+    }
+    return data;
   });
 
 // Daily activity logs
