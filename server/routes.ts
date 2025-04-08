@@ -18,35 +18,9 @@ const validateRequest = (req: Request, schema: any) => {
     console.log("Validating with schema:", schema);
     console.log("Request body before validation:", req.body);
     
-    // Special handling for specific fields that need type conversion
-    let dataToValidate = { ...req.body };
-    
-    // Handle date fields - convert string to Date object
-    if ('date' in dataToValidate && typeof dataToValidate.date === 'string') {
-      try {
-        // Convert ISO string to Date object
-        const dateObj = new Date(dataToValidate.date);
-        if (!isNaN(dateObj.getTime())) {
-          dataToValidate.date = dateObj;
-        }
-      } catch (err) {
-        console.error("Error parsing date:", err);
-      }
-    }
-    
-    // For nutrition entries, ensure data types match schema
-    if ('protein' in dataToValidate || 'carbs' in dataToValidate || 'fat' in dataToValidate) {
-      dataToValidate = {
-        ...dataToValidate,
-        // Convert number to string for numeric fields that expect string in schema
-        protein: dataToValidate.protein?.toString(),
-        carbs: dataToValidate.carbs?.toString(),
-        fat: dataToValidate.fat?.toString(),
-      };
-    }
-    
-    console.log("Modified data for validation:", dataToValidate);
-    const validatedData = schema.parse(dataToValidate);
+    // We don't need to pre-process data anymore - our schema handles conversions directly
+    // Simply pass the raw request body to the schema for validation
+    const validatedData = schema.parse(req.body);
     console.log("Validation successful:", validatedData);
     return { data: validatedData, error: null };
   } catch (error) {

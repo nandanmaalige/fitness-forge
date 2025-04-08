@@ -89,12 +89,10 @@ export default function Nutrition() {
   const createEntryMutation = useMutation({
     mutationFn: async (data: NutritionFormData) => {
       // Format all fields to match server expectations
-      let dateObj = data.date instanceof Date ? data.date : new Date(data.date as any);
-      
+      // We'll send the date as is - our schema will handle conversion
       const formattedData = {
         userId: data.userId,
-        // Convert date to ISO string directly - server will parse it back to Date
-        date: dateObj.toISOString(),
+        date: data.date, // Schema can now handle both string and Date objects
         calories: Number(data.calories),
         protein: data.protein, // Already transformed to string by schema
         carbs: data.carbs,     // Already transformed to string by schema
