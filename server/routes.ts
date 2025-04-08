@@ -225,7 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/users/:userId/activity-logs/today", async (req: Request, res: Response) => {
     const userId = parseInt(req.params.userId);
-    const today = new Date();
+    const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
     const log = await storage.getActivityLogByUserIdAndDate(userId, today);
     
     if (!log) {

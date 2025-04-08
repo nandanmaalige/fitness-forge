@@ -45,7 +45,7 @@ export interface IStorage {
   createActivityLog(log: InsertActivityLog): Promise<ActivityLog>;
   getActivityLogsByUserId(userId: number): Promise<ActivityLog[]>;
   updateActivityLog(id: number, log: Partial<InsertActivityLog>): Promise<ActivityLog | undefined>;
-  getActivityLogByUserIdAndDate(userId: number, date: Date): Promise<ActivityLog | undefined>;
+  getActivityLogByUserIdAndDate(userId: number, date: string): Promise<ActivityLog | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -212,17 +212,15 @@ export class DatabaseStorage implements IStorage {
     return updatedLog;
   }
 
-  async getActivityLogByUserIdAndDate(userId: number, date: Date): Promise<ActivityLog | undefined> {
-    const dateStr = date.toISOString().split('T')[0];
-    
-    // Use SQL to handle date comparison
+  async getActivityLogByUserIdAndDate(userId: number, date: string): Promise<ActivityLog | undefined> {
+    // Direct string comparison since date is stored as text
     const [log] = await db
       .select()
       .from(activityLogs)
       .where(
         and(
           eq(activityLogs.userId, userId),
-          sql`DATE(${activityLogs.date}) = ${dateStr}`
+          eq(activityLogs.date, date)
         )
       );
     
