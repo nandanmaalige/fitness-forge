@@ -6,6 +6,8 @@ import {
   NutritionEntry, InsertNutritionEntry, nutritionEntries,
   ActivityLog, InsertActivityLog, activityLogs
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, sql, desc } from "drizzle-orm";
 
 export interface IStorage {
   // User management
@@ -46,38 +48,197 @@ export interface IStorage {
   getActivityLogByUserIdAndDate(userId: number, date: Date): Promise<ActivityLog | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private workouts: Map<number, Workout>;
-  private exercises: Map<number, Exercise>;
-  private goals: Map<number, Goal>;
-  private nutritionEntries: Map<number, NutritionEntry>;
-  private activityLogs: Map<number, ActivityLog>;
-  
-  private userIdCounter: number;
-  private workoutIdCounter: number;
-  private exerciseIdCounter: number;
-  private goalIdCounter: number;
-  private nutritionIdCounter: number;
-  private activityLogIdCounter: number;
+export class DatabaseStorage implements IStorage {
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
 
-  constructor() {
-    this.users = new Map();
-    this.workouts = new Map();
-    this.exercises = new Map();
-    this.goals = new Map();
-    this.nutritionEntries = new Map();
-    this.activityLogs = new Map();
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const [newUser] = await db.insert(users).values(user).returning();
+    return newUser;
+  }
+
+  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+
+  // Workout methods
+  async createWorkout(workout: InsertWorkout): Promise<Workout> {
+    const [newWorkout] = await db.insert(workouts).values(workout).returning();
+    return newWorkout;
+  }
+
+  async getWorkout(id: number): Promise<Workout | undefined> {
+    const [workout] = await db.select().from(workouts).where(eq(workouts.id, id));
+    return workout;
+  }
+
+  async getWorkoutsByUserId(userId: number): Promise<Workout[]> {
+    return await db
+      .select()
+      .from(workouts)
+      .where(eq(workouts.userId, userId))
+      .orderBy(desc(workouts.date));
+  }
+
+  async updateWorkout(id: number, workoutData: Partial<InsertWorkout>): Promise<Workout | undefined> {
+    const [updatedWorkout] = await db
+      .update(workouts)
+      .set(workoutData)
+      .where(eq(workouts.id, id))
+      .returning();
+    return updatedWorkout;
+  }
+
+  async deleteWorkout(id: number): Promise<boolean> {
+    const result = await db.delete(workouts).where(eq(workouts.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Exercise methods
+  async createExercise(exercise: InsertExercise): Promise<Exercise> {
+    const [newExercise] = await db.insert(exercises).values(exercise).returning();
+    return newExercise;
+  }
+
+  async getExercisesByWorkoutId(workoutId: number): Promise<Exercise[]> {
+    return await db
+      .select()
+      .from(exercises)
+      .where(eq(exercises.workoutId, workoutId));
+  }
+
+  async updateExercise(id: number, exerciseData: Partial<InsertExercise>): Promise<Exercise | undefined> {
+    const [updatedExercise] = await db
+      .update(exercises)
+      .set(exerciseData)
+      .where(eq(exercises.id, id))
+      .returning();
+    return updatedExercise;
+  }
+
+  async deleteExercise(id: number): Promise<boolean> {
+    const result = await db.delete(exercises).where(eq(exercises.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Goal methods
+  async createGoal(goal: InsertGoal): Promise<Goal> {
+    const [newGoal] = await db.insert(goals).values(goal).returning();
+    return newGoal;
+  }
+
+  async getGoalsByUserId(userId: number): Promise<Goal[]> {
+    return await db
+      .select()
+      .from(goals)
+      .where(eq(goals.userId, userId));
+  }
+
+  async updateGoal(id: number, goalData: Partial<InsertGoal>): Promise<Goal | undefined> {
+    const [updatedGoal] = await db
+      .update(goals)
+      .set(goalData)
+      .where(eq(goals.id, id))
+      .returning();
+    return updatedGoal;
+  }
+
+  async deleteGoal(id: number): Promise<boolean> {
+    const result = await db.delete(goals).where(eq(goals.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Nutrition methods
+  async createNutritionEntry(entry: InsertNutritionEntry): Promise<NutritionEntry> {
+    const [newEntry] = await db.insert(nutritionEntries).values(entry).returning();
+    return newEntry;
+  }
+
+  async getNutritionEntriesByUserId(userId: number): Promise<NutritionEntry[]> {
+    return await db
+      .select()
+      .from(nutritionEntries)
+      .where(eq(nutritionEntries.userId, userId))
+      .orderBy(desc(nutritionEntries.date));
+  }
+
+  async updateNutritionEntry(id: number, entryData: Partial<InsertNutritionEntry>): Promise<NutritionEntry | undefined> {
+    const [updatedEntry] = await db
+      .update(nutritionEntries)
+      .set(entryData)
+      .where(eq(nutritionEntries.id, id))
+      .returning();
+    return updatedEntry;
+  }
+
+  async deleteNutritionEntry(id: number): Promise<boolean> {
+    const result = await db.delete(nutritionEntries).where(eq(nutritionEntries.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Activity Log methods
+  async createActivityLog(log: InsertActivityLog): Promise<ActivityLog> {
+    const [newLog] = await db.insert(activityLogs).values(log).returning();
+    return newLog;
+  }
+
+  async getActivityLogsByUserId(userId: number): Promise<ActivityLog[]> {
+    return await db
+      .select()
+      .from(activityLogs)
+      .where(eq(activityLogs.userId, userId))
+      .orderBy(desc(activityLogs.date));
+  }
+
+  async updateActivityLog(id: number, logData: Partial<InsertActivityLog>): Promise<ActivityLog | undefined> {
+    const [updatedLog] = await db
+      .update(activityLogs)
+      .set(logData)
+      .where(eq(activityLogs.id, id))
+      .returning();
+    return updatedLog;
+  }
+
+  async getActivityLogByUserIdAndDate(userId: number, date: Date): Promise<ActivityLog | undefined> {
+    const dateStr = date.toISOString().split('T')[0];
     
-    this.userIdCounter = 1;
-    this.workoutIdCounter = 1;
-    this.exerciseIdCounter = 1;
-    this.goalIdCounter = 1;
-    this.nutritionIdCounter = 1;
-    this.activityLogIdCounter = 1;
+    // Use SQL to handle date comparison
+    const [log] = await db
+      .select()
+      .from(activityLogs)
+      .where(
+        and(
+          eq(activityLogs.userId, userId),
+          sql`DATE(${activityLogs.date}) = ${dateStr}`
+        )
+      );
+    
+    return log;
+  }
 
-    // Add a default user
-    this.createUser({
+  // Initialization method to create default data
+  async initializeDefaultData(): Promise<void> {
+    // Check if default user exists
+    const existingUser = await this.getUserByUsername("alex");
+    if (existingUser) {
+      return; // Data already initialized
+    }
+
+    // Create default user
+    const user = await this.createUser({
       username: "alex",
       password: "password123",
       displayName: "Alex Johnson",
@@ -87,11 +248,10 @@ export class MemStorage implements IStorage {
       avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
     });
 
-    // Add some sample data for the default user
-    const userId = 1;
-    
-    // Create some workouts
-    const workout1 = this.createWorkout({
+    const userId = user.id;
+
+    // Create workouts
+    const workout1 = await this.createWorkout({
       userId,
       name: "Cardio Session",
       type: "cardio",
@@ -102,7 +262,7 @@ export class MemStorage implements IStorage {
       status: "completed"
     });
 
-    const workout2 = this.createWorkout({
+    await this.createWorkout({
       userId,
       name: "Lower Body",
       type: "strength",
@@ -113,7 +273,7 @@ export class MemStorage implements IStorage {
       status: "completed"
     });
 
-    const workout3 = this.createWorkout({
+    await this.createWorkout({
       userId,
       name: "HIIT Session",
       type: "hiit",
@@ -124,7 +284,7 @@ export class MemStorage implements IStorage {
       status: "completed"
     });
 
-    const workout4 = this.createWorkout({
+    const workout4 = await this.createWorkout({
       userId,
       name: "Upper Body Strength",
       type: "strength",
@@ -135,13 +295,33 @@ export class MemStorage implements IStorage {
       status: "scheduled"
     });
 
-    // Add exercises to the workouts
-    this.createExercise({ workoutId: workout4.id, name: "Bench Press", sets: 3, reps: 10, weight: 135 });
-    this.createExercise({ workoutId: workout4.id, name: "Shoulder Press", sets: 3, reps: 12, weight: 85 });
-    this.createExercise({ workoutId: workout4.id, name: "Bicep Curls", sets: 3, reps: 15, weight: 35 });
+    // Add exercises
+    await this.createExercise({ 
+      workoutId: workout4.id, 
+      name: "Bench Press", 
+      sets: 3, 
+      reps: 10, 
+      weight: 135
+    });
+    
+    await this.createExercise({ 
+      workoutId: workout4.id, 
+      name: "Shoulder Press", 
+      sets: 3, 
+      reps: 12, 
+      weight: 85
+    });
+    
+    await this.createExercise({ 
+      workoutId: workout4.id, 
+      name: "Bicep Curls", 
+      sets: 3, 
+      reps: 15, 
+      weight: 35
+    });
 
-    // Create some goals
-    this.createGoal({
+    // Create goals
+    await this.createGoal({
       userId,
       name: "Lose 5 lbs",
       description: "Weight loss goal",
@@ -152,7 +332,7 @@ export class MemStorage implements IStorage {
       status: "in-progress"
     });
 
-    this.createGoal({
+    await this.createGoal({
       userId,
       name: "Run 5K",
       description: "Running distance goal",
@@ -163,8 +343,8 @@ export class MemStorage implements IStorage {
       status: "in-progress"
     });
 
-    // Create activity logs
-    this.createActivityLog({
+    // Create activity log
+    await this.createActivityLog({
       userId,
       date: new Date(),
       steps: 8243,
@@ -172,175 +352,17 @@ export class MemStorage implements IStorage {
       caloriesBurned: 1872
     });
   }
-
-  // User methods
-  async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(user: InsertUser): Promise<User> {
-    const id = this.userIdCounter++;
-    const newUser: User = { ...user, id };
-    this.users.set(id, newUser);
-    return newUser;
-  }
-
-  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
-    
-    const updatedUser = { ...user, ...userData };
-    this.users.set(id, updatedUser);
-    return updatedUser;
-  }
-
-  // Workout methods
-  async createWorkout(workout: InsertWorkout): Promise<Workout> {
-    const id = this.workoutIdCounter++;
-    const newWorkout: Workout = { ...workout, id };
-    this.workouts.set(id, newWorkout);
-    return newWorkout;
-  }
-
-  async getWorkout(id: number): Promise<Workout | undefined> {
-    return this.workouts.get(id);
-  }
-
-  async getWorkoutsByUserId(userId: number): Promise<Workout[]> {
-    return Array.from(this.workouts.values())
-      .filter(workout => workout.userId === userId)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }
-
-  async updateWorkout(id: number, workoutData: Partial<InsertWorkout>): Promise<Workout | undefined> {
-    const workout = this.workouts.get(id);
-    if (!workout) return undefined;
-    
-    const updatedWorkout = { ...workout, ...workoutData };
-    this.workouts.set(id, updatedWorkout);
-    return updatedWorkout;
-  }
-
-  async deleteWorkout(id: number): Promise<boolean> {
-    return this.workouts.delete(id);
-  }
-
-  // Exercise methods
-  async createExercise(exercise: InsertExercise): Promise<Exercise> {
-    const id = this.exerciseIdCounter++;
-    const newExercise: Exercise = { ...exercise, id };
-    this.exercises.set(id, newExercise);
-    return newExercise;
-  }
-
-  async getExercisesByWorkoutId(workoutId: number): Promise<Exercise[]> {
-    return Array.from(this.exercises.values())
-      .filter(exercise => exercise.workoutId === workoutId);
-  }
-
-  async updateExercise(id: number, exerciseData: Partial<InsertExercise>): Promise<Exercise | undefined> {
-    const exercise = this.exercises.get(id);
-    if (!exercise) return undefined;
-    
-    const updatedExercise = { ...exercise, ...exerciseData };
-    this.exercises.set(id, updatedExercise);
-    return updatedExercise;
-  }
-
-  async deleteExercise(id: number): Promise<boolean> {
-    return this.exercises.delete(id);
-  }
-
-  // Goal methods
-  async createGoal(goal: InsertGoal): Promise<Goal> {
-    const id = this.goalIdCounter++;
-    const newGoal: Goal = { ...goal, id };
-    this.goals.set(id, newGoal);
-    return newGoal;
-  }
-
-  async getGoalsByUserId(userId: number): Promise<Goal[]> {
-    return Array.from(this.goals.values())
-      .filter(goal => goal.userId === userId);
-  }
-
-  async updateGoal(id: number, goalData: Partial<InsertGoal>): Promise<Goal | undefined> {
-    const goal = this.goals.get(id);
-    if (!goal) return undefined;
-    
-    const updatedGoal = { ...goal, ...goalData };
-    this.goals.set(id, updatedGoal);
-    return updatedGoal;
-  }
-
-  async deleteGoal(id: number): Promise<boolean> {
-    return this.goals.delete(id);
-  }
-
-  // Nutrition methods
-  async createNutritionEntry(entry: InsertNutritionEntry): Promise<NutritionEntry> {
-    const id = this.nutritionIdCounter++;
-    const newEntry: NutritionEntry = { ...entry, id };
-    this.nutritionEntries.set(id, newEntry);
-    return newEntry;
-  }
-
-  async getNutritionEntriesByUserId(userId: number): Promise<NutritionEntry[]> {
-    return Array.from(this.nutritionEntries.values())
-      .filter(entry => entry.userId === userId)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }
-
-  async updateNutritionEntry(id: number, entryData: Partial<InsertNutritionEntry>): Promise<NutritionEntry | undefined> {
-    const entry = this.nutritionEntries.get(id);
-    if (!entry) return undefined;
-    
-    const updatedEntry = { ...entry, ...entryData };
-    this.nutritionEntries.set(id, updatedEntry);
-    return updatedEntry;
-  }
-
-  async deleteNutritionEntry(id: number): Promise<boolean> {
-    return this.nutritionEntries.delete(id);
-  }
-
-  // Activity Log methods
-  async createActivityLog(log: InsertActivityLog): Promise<ActivityLog> {
-    const id = this.activityLogIdCounter++;
-    const newLog: ActivityLog = { ...log, id };
-    this.activityLogs.set(id, newLog);
-    return newLog;
-  }
-
-  async getActivityLogsByUserId(userId: number): Promise<ActivityLog[]> {
-    return Array.from(this.activityLogs.values())
-      .filter(log => log.userId === userId)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }
-
-  async updateActivityLog(id: number, logData: Partial<InsertActivityLog>): Promise<ActivityLog | undefined> {
-    const log = this.activityLogs.get(id);
-    if (!log) return undefined;
-    
-    const updatedLog = { ...log, ...logData };
-    this.activityLogs.set(id, updatedLog);
-    return updatedLog;
-  }
-
-  async getActivityLogByUserIdAndDate(userId: number, date: Date): Promise<ActivityLog | undefined> {
-    const dateStr = date.toISOString().split('T')[0];
-    return Array.from(this.activityLogs.values())
-      .find(log => {
-        const logDateStr = new Date(log.date).toISOString().split('T')[0];
-        return log.userId === userId && logDateStr === dateStr;
-      });
-  }
 }
 
-export const storage = new MemStorage();
+// Initialize the database storage
+export const storage = new DatabaseStorage();
+
+// Initialize default data in the background
+(async () => {
+  try {
+    await storage.initializeDefaultData();
+    console.log("Database initialized with default data");
+  } catch (error) {
+    console.error("Error initializing database:", error);
+  }
+})();
