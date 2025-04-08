@@ -88,7 +88,13 @@ export default function Nutrition() {
   // Create nutrition entry mutation
   const createEntryMutation = useMutation({
     mutationFn: async (data: NutritionFormData) => {
-      const response = await apiRequest("POST", "/api/nutrition", data);
+      // Format the date as ISO string to ensure proper serialization
+      const formattedData = {
+        ...data,
+        date: data.date.toISOString(),
+      };
+      
+      const response = await apiRequest("POST", "/api/nutrition", formattedData);
       return response.json();
     },
     onSuccess: () => {
@@ -319,6 +325,7 @@ export default function Nutrition() {
                         <Textarea
                           placeholder="Describe what you ate"
                           {...field}
+                          value={field.value || ''}
                         />
                       </FormControl>
                       <FormMessage />
@@ -405,7 +412,7 @@ export default function Nutrition() {
                 <div className="text-lg font-semibold text-blue-500">
                   {nutritionEntries
                     ?.filter(entry => isToday(new Date(entry.date)))
-                    .reduce((sum, entry) => sum + (entry.protein || 0), 0)}g
+                    .reduce((sum, entry) => sum + (Number(entry.protein) || 0), 0)}g
                 </div>
                 <div className="text-sm text-gray-500">Protein</div>
               </div>
@@ -413,7 +420,7 @@ export default function Nutrition() {
                 <div className="text-lg font-semibold text-green-500">
                   {nutritionEntries
                     ?.filter(entry => isToday(new Date(entry.date)))
-                    .reduce((sum, entry) => sum + (entry.carbs || 0), 0)}g
+                    .reduce((sum, entry) => sum + (Number(entry.carbs) || 0), 0)}g
                 </div>
                 <div className="text-sm text-gray-500">Carbs</div>
               </div>
@@ -421,7 +428,7 @@ export default function Nutrition() {
                 <div className="text-lg font-semibold text-yellow-500">
                   {nutritionEntries
                     ?.filter(entry => isToday(new Date(entry.date)))
-                    .reduce((sum, entry) => sum + (entry.fat || 0), 0)}g
+                    .reduce((sum, entry) => sum + (Number(entry.fat) || 0), 0)}g
                 </div>
                 <div className="text-sm text-gray-500">Fat</div>
               </div>

@@ -80,7 +80,13 @@ export default function GoalForm({ userId }: GoalFormProps) {
   // Handle goal submission
   const createGoalMutation = useMutation({
     mutationFn: async (data: GoalFormData) => {
-      const response = await apiRequest("POST", "/api/goals", data);
+      // Format the target date as ISO string to ensure proper serialization
+      const formattedData = {
+        ...data,
+        targetDate: data.targetDate.toISOString(),
+      };
+      
+      const response = await apiRequest("POST", "/api/goals", formattedData);
       return response.json();
     },
     onSuccess: () => {

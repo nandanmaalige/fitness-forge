@@ -105,7 +105,13 @@ export default function WorkoutForm({ userId }: WorkoutFormProps) {
   // Handle workout submission
   const createWorkoutMutation = useMutation({
     mutationFn: async (data: WorkoutFormData) => {
-      const workout = await apiRequest("POST", "/api/workouts", data);
+      // Format the date as ISO string to ensure proper serialization
+      const formattedData = {
+        ...data,
+        date: data.date.toISOString(),
+      };
+      
+      const workout = await apiRequest("POST", "/api/workouts", formattedData);
       const workoutData = await workout.json();
       
       // Create exercises for this workout
@@ -328,6 +334,7 @@ export default function WorkoutForm({ userId }: WorkoutFormProps) {
                     <Textarea
                       placeholder="Describe your workout plan"
                       {...field}
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormMessage />
