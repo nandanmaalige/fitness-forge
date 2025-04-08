@@ -15,7 +15,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { 
   Form, 
-  FormControl, 
+  FormControl,
+  FormDescription, 
   FormField, 
   FormItem, 
   FormLabel, 
@@ -52,7 +53,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 // Extend the nutrition schema with validation rules
 const nutritionFormSchema = insertNutritionEntrySchema.extend({
-  date: z.coerce.date(),
+  // Accept both string and Date objects for date
+  date: z.union([z.string(), z.date()]),
   calories: z.coerce.number().min(1, "Calories must be at least 1"),
   protein: z.coerce.number().transform(val => val?.toString()).optional(),
   carbs: z.coerce.number().transform(val => val?.toString()).optional(),
@@ -76,7 +78,7 @@ export default function Nutrition() {
     resolver: zodResolver(nutritionFormSchema),
     defaultValues: {
       userId,
-      date: new Date(),
+      date: new Date().toISOString().split('T')[0], // Use string format YYYY-MM-DD
       calories: 0,
       protein: "0", // Use string for numeric type fields as expected by schema
       carbs: "0",   // Use string for numeric type fields as expected by schema
@@ -109,7 +111,7 @@ export default function Nutrition() {
       setIsAddingEntry(false);
       form.reset({
         userId,
-        date: new Date(),
+        date: new Date().toISOString().split('T')[0], // Use string format YYYY-MM-DD
         calories: 0,
         protein: "0", // Use string for numeric type fields
         carbs: "0",   // Use string for numeric type fields
@@ -230,35 +232,24 @@ export default function Nutrition() {
                   control={form.control}
                   name="date"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={`w-full pl-3 text-left font-normal ${
-                                !field.value && "text-muted-foreground"
-                              }`}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                    <FormItem>
+                      <FormLabel>Date (YYYY-MM-DD)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="text" 
+                          placeholder="YYYY-MM-DD" 
+                          value={field.value instanceof Date ? 
+                            field.value.toISOString().split('T')[0] : 
+                            String(field.value)}
+                          onChange={(e) => {
+                            // Pass the date string directly to the form
+                            field.onChange(e.target.value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Enter the date in YYYY-MM-DD format (e.g., 2025-04-08)
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
