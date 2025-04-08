@@ -33,7 +33,7 @@ export const workouts = pgTable("workouts", {
   type: text("type").notNull(), // cardio, strength, hiit, etc.
   duration: integer("duration").notNull(), // in minutes
   caloriesBurned: integer("calories_burned"),
-  date: timestamp("date").notNull(),
+  date: text("date").notNull(), // Changed to text to avoid Date conversion issues
   notes: text("notes"),
   status: text("status").notNull(), // scheduled, completed, skipped
 });
@@ -79,14 +79,14 @@ export const goals = pgTable("goals", {
   userId: integer("user_id").notNull(),
   name: text("name").notNull(),
   description: text("description").notNull(),
-  targetDate: timestamp("target_date").notNull(),
+  targetDate: text("target_date").notNull(), // Changed to text to avoid Date conversion issues
   currentValue: numeric("current_value").notNull(),
   targetValue: numeric("target_value").notNull(),
   unit: text("unit").notNull(), // lbs, miles, etc.
   status: text("status").notNull(), // in-progress, completed, abandoned
 });
 
-// Add date conversion for goals
+// No date conversion for goals - keep string dates
 export const insertGoalSchema = createInsertSchema(goals)
   .pick({
     userId: true,
@@ -97,13 +97,6 @@ export const insertGoalSchema = createInsertSchema(goals)
     targetValue: true,
     unit: true,
     status: true,
-  })
-  .transform((data) => {
-    // Convert targetDate string to Date object if it's a string
-    if (data.targetDate && typeof data.targetDate === 'string') {
-      data.targetDate = new Date(data.targetDate);
-    }
-    return data;
   });
 
 // Nutrition schema - changed date to text type
@@ -134,7 +127,7 @@ export const insertNutritionEntrySchema = createInsertSchema(nutritionEntries)
 export const activityLogs = pgTable("activity_logs", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
-  date: timestamp("date").notNull(),
+  date: text("date").notNull(), // Changed to text to avoid Date conversion issues
   steps: integer("steps"),
   activeMinutes: integer("active_minutes"),
   caloriesBurned: integer("calories_burned"),

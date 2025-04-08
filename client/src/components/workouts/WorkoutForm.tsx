@@ -43,7 +43,7 @@ import { useToast } from "@/hooks/use-toast";
 
 // Extend workout schema with validation rules
 const workoutFormSchema = insertWorkoutSchema.extend({
-  date: z.coerce.date(),
+  date: z.string().min(10, "Date must be in YYYY-MM-DD format"),
   name: z.string().min(3, "Workout name must be at least 3 characters"),
   duration: z.coerce.number().min(1, "Duration must be at least 1 minute"),
   caloriesBurned: z.coerce.number().optional(),
@@ -96,7 +96,7 @@ export default function WorkoutForm({ userId }: WorkoutFormProps) {
       type: "strength",
       duration: 45,
       caloriesBurned: 0,
-      date: new Date(),
+      date: new Date().toISOString().split('T')[0], // Use string format YYYY-MM-DD
       notes: "",
       status: "scheduled",
     },
@@ -105,10 +105,10 @@ export default function WorkoutForm({ userId }: WorkoutFormProps) {
   // Handle workout submission
   const createWorkoutMutation = useMutation({
     mutationFn: async (data: WorkoutFormData) => {
-      // Format the date as ISO string to ensure proper serialization
+      // We're already using string dates, so no need to convert
       const formattedData = {
         ...data,
-        date: data.date.toISOString(),
+        date: data.date, // Already in YYYY-MM-DD format
       };
       
       const workout = await apiRequest("POST", "/api/workouts", formattedData);
@@ -235,35 +235,18 @@ export default function WorkoutForm({ userId }: WorkoutFormProps) {
                 control={form.control}
                 name="date"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={`w-full pl-3 text-left font-normal ${
-                              !field.value && "text-muted-foreground"
-                            }`}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                  <FormItem>
+                    <FormLabel>Date (YYYY-MM-DD)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="text" 
+                        placeholder="YYYY-MM-DD" 
+                        value={field.value}
+                        onChange={(e) => {
+                          field.onChange(e.target.value);
+                        }}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

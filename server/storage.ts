@@ -257,7 +257,7 @@ export class DatabaseStorage implements IStorage {
       type: "cardio",
       duration: 45,
       caloriesBurned: 320,
-      date: new Date(),
+      date: new Date().toISOString().split('T')[0], // Today's date as string YYYY-MM-DD
       notes: "Treadmill, Cycling",
       status: "completed"
     });
@@ -268,7 +268,7 @@ export class DatabaseStorage implements IStorage {
       type: "strength",
       duration: 60,
       caloriesBurned: 420,
-      date: new Date(Date.now() - 24 * 60 * 60 * 1000), // yesterday
+      date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0], // yesterday as YYYY-MM-DD
       notes: "Squats, Lunges, Deadlifts",
       status: "completed"
     });
@@ -279,7 +279,7 @@ export class DatabaseStorage implements IStorage {
       type: "hiit",
       duration: 30,
       caloriesBurned: 380,
-      date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // two days ago
+      date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // two days ago as YYYY-MM-DD
       notes: "Circuit training",
       status: "completed"
     });
@@ -290,7 +290,7 @@ export class DatabaseStorage implements IStorage {
       type: "strength",
       duration: 45,
       caloriesBurned: 350,
-      date: new Date(Date.now() + 24 * 60 * 60 * 1000), // tomorrow
+      date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0], // tomorrow as YYYY-MM-DD
       notes: "Chest, shoulders, arms",
       status: "scheduled"
     });
@@ -325,7 +325,7 @@ export class DatabaseStorage implements IStorage {
       userId,
       name: "Lose 5 lbs",
       description: "Weight loss goal",
-      targetDate: new Date("2023-07-30"),
+      targetDate: "2023-07-30", // String date format YYYY-MM-DD
       currentValue: "165",
       targetValue: "160",
       unit: "lbs",
@@ -336,7 +336,7 @@ export class DatabaseStorage implements IStorage {
       userId,
       name: "Run 5K",
       description: "Running distance goal",
-      targetDate: new Date("2023-08-15"),
+      targetDate: "2023-08-15", // String date format YYYY-MM-DD
       currentValue: "3.2",
       targetValue: "5",
       unit: "K",
@@ -346,7 +346,7 @@ export class DatabaseStorage implements IStorage {
     // Create activity log
     await this.createActivityLog({
       userId,
-      date: new Date(),
+      date: new Date().toISOString().split('T')[0], // Today's date as string YYYY-MM-DD
       steps: 8243,
       activeMinutes: 68,
       caloriesBurned: 1872
