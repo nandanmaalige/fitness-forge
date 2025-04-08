@@ -50,14 +50,26 @@ export default function Workouts() {
     queryKey: [`/api/users/${userId}/workouts`],
   });
   
+  // Helper function to compare dates as strings (YYYY-MM-DD format)
+  const isDateBeforeToday = (dateStr: string): boolean => {
+    const today = new Date().toISOString().split('T')[0];
+    return dateStr < today;
+  };
+  
+  const compareDates = (a: string, b: string): number => {
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+  };
+  
   // Filter workouts by status
   const upcomingWorkouts = workouts?.filter(
-    w => w.status === "scheduled" && new Date(w.date) >= new Date()
-  ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    w => w.status === "scheduled" && !isDateBeforeToday(w.date)
+  ).sort((a, b) => compareDates(a.date, b.date));
   
   const pastWorkouts = workouts?.filter(
-    w => w.status === "completed" || new Date(w.date) < new Date()
-  ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    w => w.status === "completed" || isDateBeforeToday(w.date)
+  ).sort((a, b) => compareDates(b.date, a.date));
   
   // Mark workout as completed
   const completeMutation = useMutation({
@@ -175,7 +187,7 @@ export default function Workouts() {
                       <div className="flex justify-between mb-2">
                         <h3 className="font-semibold text-lg">{workout.name}</h3>
                         <span className="text-sm bg-blue-100 text-primary px-2 py-1 rounded-full">
-                          {format(new Date(workout.date), 'MMM d, h:mm a')}
+                          {workout.date}
                         </span>
                       </div>
                       <p className="text-gray-600 mb-3">
@@ -258,7 +270,7 @@ export default function Workouts() {
                           )}
                         </h3>
                         <span className="text-sm text-gray-500">
-                          {format(new Date(workout.date), 'MMM d, yyyy')}
+                          {workout.date}
                         </span>
                       </div>
                       <p className="text-gray-600 mb-3">
