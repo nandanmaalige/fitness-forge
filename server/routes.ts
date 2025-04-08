@@ -18,36 +18,9 @@ const validateRequest = (req: Request, schema: any) => {
     console.log("Validating with schema:", schema);
     console.log("Request body before validation:", req.body);
     
-    // Special handling for date fields to make them compatible with PostgreSQL
-    const body = { ...req.body };
-    
-    // Convert date strings to proper PostgreSQL timestamp format
-    if (body.date && typeof body.date === 'string') {
-      // Ensure the date is in YYYY-MM-DD format for PostgreSQL
-      const dateParts = body.date.split('-');
-      if (dateParts.length === 3) {
-        const year = parseInt(dateParts[0]);
-        const month = parseInt(dateParts[1]) - 1; // JS months are 0-based
-        const day = parseInt(dateParts[2]);
-        const dateObj = new Date(year, month, day);
-        body.date = dateObj.toISOString();
-      }
-    }
-    
-    // Same for targetDate field in goals
-    if (body.targetDate && typeof body.targetDate === 'string') {
-      const dateParts = body.targetDate.split('-');
-      if (dateParts.length === 3) {
-        const year = parseInt(dateParts[0]);
-        const month = parseInt(dateParts[1]) - 1; // JS months are 0-based
-        const day = parseInt(dateParts[2]);
-        const dateObj = new Date(year, month, day);
-        body.targetDate = dateObj.toISOString();
-      }
-    }
-    
-    // Now validate with the schema
-    const validatedData = schema.parse(body);
+    // No special handling for date fields - keep them as strings
+    // Just validate directly with the schema that accepts strings
+    const validatedData = schema.parse(req.body);
     console.log("Validation successful:", validatedData);
     return { data: validatedData, error: null };
   } catch (error) {

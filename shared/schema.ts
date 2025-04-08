@@ -106,11 +106,11 @@ export const insertGoalSchema = createInsertSchema(goals)
     return data;
   });
 
-// Nutrition schema
+// Nutrition schema - changed date to text type
 export const nutritionEntries = pgTable("nutrition_entries", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
-  date: timestamp("date").notNull(),
+  date: text("date").notNull(), // Using text to avoid Date conversion issues
   calories: integer("calories").notNull(),
   protein: numeric("protein"), // in grams
   carbs: numeric("carbs"), // in grams
@@ -118,7 +118,7 @@ export const nutritionEntries = pgTable("nutrition_entries", {
   notes: text("notes"),
 });
 
-// Create base schema with date conversion
+// Create base schema without any date conversion
 export const insertNutritionEntrySchema = createInsertSchema(nutritionEntries)
   .pick({
     userId: true,
@@ -128,13 +128,6 @@ export const insertNutritionEntrySchema = createInsertSchema(nutritionEntries)
     carbs: true,
     fat: true,
     notes: true,
-  })
-  .transform((data) => {
-    // Convert date string to Date object if it's a string
-    if (data.date && typeof data.date === 'string') {
-      data.date = new Date(data.date);
-    }
-    return data;
   });
 
 // Daily activity logs
