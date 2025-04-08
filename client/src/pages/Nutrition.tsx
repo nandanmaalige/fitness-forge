@@ -54,9 +54,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 const nutritionFormSchema = insertNutritionEntrySchema.extend({
   date: z.coerce.date(),
   calories: z.coerce.number().min(1, "Calories must be at least 1"),
-  protein: z.coerce.number().optional(),
-  carbs: z.coerce.number().optional(),
-  fat: z.coerce.number().optional(),
+  protein: z.coerce.number().transform(val => val?.toString()).optional(),
+  carbs: z.coerce.number().transform(val => val?.toString()).optional(),
+  fat: z.coerce.number().transform(val => val?.toString()).optional(),
 });
 
 type NutritionFormData = z.infer<typeof nutritionFormSchema>;
@@ -78,9 +78,9 @@ export default function Nutrition() {
       userId,
       date: new Date(),
       calories: 0,
-      protein: 0,
-      carbs: 0,
-      fat: 0,
+      protein: "0", // Use string for numeric type fields as expected by schema
+      carbs: "0",   // Use string for numeric type fields as expected by schema
+      fat: "0",     // Use string for numeric type fields as expected by schema
       notes: "",
     },
   });
@@ -88,11 +88,15 @@ export default function Nutrition() {
   // Create nutrition entry mutation
   const createEntryMutation = useMutation({
     mutationFn: async (data: NutritionFormData) => {
-      // Make sure userId is in the request
+      // Format all fields to match server expectations
       const formattedData = {
-        ...data,
-        userId: 1, // In a real app, this would come from auth context
-        date: data.date.toISOString(),
+        userId: data.userId,
+        date: data.date instanceof Date ? data.date : new Date(data.date as any),
+        calories: Number(data.calories),
+        protein: data.protein, // Already transformed to string by schema
+        carbs: data.carbs,     // Already transformed to string by schema
+        fat: data.fat,         // Already transformed to string by schema
+        notes: data.notes,
       };
       
       console.log("Submitting nutrition entry:", formattedData);
@@ -106,9 +110,9 @@ export default function Nutrition() {
         userId,
         date: new Date(),
         calories: 0,
-        protein: 0,
-        carbs: 0,
-        fat: 0,
+        protein: "0", // Use string for numeric type fields
+        carbs: "0",   // Use string for numeric type fields
+        fat: "0",     // Use string for numeric type fields
         notes: "",
       });
       toast({

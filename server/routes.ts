@@ -15,11 +15,33 @@ import { fromZodError } from "zod-validation-error";
 // Helper for handling zod validation errors
 const validateRequest = (req: Request, schema: any) => {
   try {
-    return { data: schema.parse(req.body), error: null };
+    console.log("Validating with schema:", schema);
+    console.log("Request body before validation:", req.body);
+    
+    // Special handling for specific fields that need type conversion
+    let dataToValidate = req.body;
+    
+    // For nutrition entries, ensure data types match schema
+    if ('protein' in dataToValidate || 'carbs' in dataToValidate || 'fat' in dataToValidate) {
+      dataToValidate = {
+        ...dataToValidate,
+        // Convert number to string for numeric fields that expect string in schema
+        protein: dataToValidate.protein?.toString(),
+        carbs: dataToValidate.carbs?.toString(),
+        fat: dataToValidate.fat?.toString(),
+      };
+    }
+    
+    console.log("Modified data for validation:", dataToValidate);
+    const validatedData = schema.parse(dataToValidate);
+    console.log("Validation successful:", validatedData);
+    return { data: validatedData, error: null };
   } catch (error) {
     if (error instanceof ZodError) {
+      console.error("ZodError encountered:", error.errors);
       return { data: null, error: fromZodError(error).message };
     }
+    console.error("Unknown validation error:", error);
     return { data: null, error: "Invalid request data" };
   }
 };
@@ -162,14 +184,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Nutrition routes
   app.post("/api/nutrition", async (req: Request, res: Response) => {
-    const { data, error } = validateRequest(req, insertNutritionEntrySchema);
+    console.log("Received nutrition data:", req.body);
     
-    if (error) {
-      return res.status(400).json({ message: error });
+    try {
+      const { data, error } = validateRequest(req, insertNutritionEntrySchema);
+      
+      if (error) {
+        console.error("Validation error:", error);
+        return res.status(400).json({ message: error });
+      }
+      
+      console.log("Validated nutrition data:", data);
+      const entry = await storage.createNutritionEntry(data);
+      console.log("Created nutrition entry:", entry);
+      return res.status(201).json(entry);
+    } catch (err) {
+      console.error("Error in nutrition POST endpoint:", err);
+      return res.status(500).json({ message: err instanceof Error ? err.message : "Unknown error" });
     }
-    
-    const entry = await storage.createNutritionEntry(data);
-    return res.status(201).json(entry);
   });
 
   app.get("/api/users/:userId/nutrition", async (req: Request, res: Response) => {
