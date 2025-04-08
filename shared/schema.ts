@@ -38,7 +38,7 @@ export const workouts = pgTable("workouts", {
   status: text("status").notNull(), // scheduled, completed, skipped
 });
 
-// Apply date handling for workouts
+// No special date handling for workouts
 export const insertWorkoutSchema = createInsertSchema(workouts)
   .pick({
     userId: true,
@@ -49,15 +49,6 @@ export const insertWorkoutSchema = createInsertSchema(workouts)
     date: true,
     notes: true,
     status: true,
-  })
-  .extend({
-    // Override the date field to accept both string and Date objects
-    date: z.union([z.string(), z.date()]).transform((val) => {
-      if (typeof val === 'string') {
-        return new Date(val);
-      }
-      return val;
-    }),
   });
 
 // Exercise schema
@@ -95,7 +86,7 @@ export const goals = pgTable("goals", {
   status: text("status").notNull(), // in-progress, completed, abandoned
 });
 
-// Apply date handling for goals
+// No special date handling for goals
 export const insertGoalSchema = createInsertSchema(goals)
   .pick({
     userId: true,
@@ -106,15 +97,6 @@ export const insertGoalSchema = createInsertSchema(goals)
     targetValue: true,
     unit: true,
     status: true,
-  })
-  .extend({
-    // Override the date field to accept both string and Date objects
-    targetDate: z.union([z.string(), z.date()]).transform((val) => {
-      if (typeof val === 'string') {
-        return new Date(val);
-      }
-      return val;
-    }),
   });
 
 // Nutrition schema
@@ -129,7 +111,7 @@ export const nutritionEntries = pgTable("nutrition_entries", {
   notes: text("notes"),
 });
 
-// Create base schema then customize the date field to handle both string and Date
+// Create base schema without special date handling
 export const insertNutritionEntrySchema = createInsertSchema(nutritionEntries)
   .pick({
     userId: true,
@@ -139,15 +121,6 @@ export const insertNutritionEntrySchema = createInsertSchema(nutritionEntries)
     carbs: true,
     fat: true,
     notes: true,
-  })
-  .extend({
-    // Override the date field to accept both string and Date objects
-    date: z.union([z.string(), z.date()]).transform((val) => {
-      if (typeof val === 'string') {
-        return new Date(val);
-      }
-      return val;
-    }),
   });
 
 // Daily activity logs
@@ -160,7 +133,7 @@ export const activityLogs = pgTable("activity_logs", {
   caloriesBurned: integer("calories_burned"),
 });
 
-// Also apply the same date handling for activity logs
+// No special date handling for activity logs
 export const insertActivityLogSchema = createInsertSchema(activityLogs)
   .pick({
     userId: true,
@@ -168,15 +141,6 @@ export const insertActivityLogSchema = createInsertSchema(activityLogs)
     steps: true,
     activeMinutes: true,
     caloriesBurned: true,
-  })
-  .extend({
-    // Override the date field to accept both string and Date objects
-    date: z.union([z.string(), z.date()]).transform((val) => {
-      if (typeof val === 'string') {
-        return new Date(val);
-      }
-      return val;
-    }),
   });
 
 // Relations

@@ -53,8 +53,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 // Extend the nutrition schema with validation rules
 const nutritionFormSchema = insertNutritionEntrySchema.extend({
-  // Accept both string and Date objects for date
-  date: z.union([z.string(), z.date()]),
+  // Only use string for date fields - simpler
+  date: z.string(),
   calories: z.coerce.number().min(1, "Calories must be at least 1"),
   protein: z.coerce.number().transform(val => val?.toString()).optional(),
   carbs: z.coerce.number().transform(val => val?.toString()).optional(),
@@ -103,8 +103,14 @@ export default function Nutrition() {
       };
       
       console.log("Submitting nutrition entry:", formattedData);
-      const response = await apiRequest("POST", "/api/nutrition", formattedData);
-      return response.json();
+      try {
+        const response = await apiRequest("POST", "/api/nutrition", formattedData);
+        console.log("API response:", response);
+        return await response.json();
+      } catch (error) {
+        console.error("API request failed:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/nutrition`] });
@@ -238,9 +244,7 @@ export default function Nutrition() {
                         <Input 
                           type="text" 
                           placeholder="YYYY-MM-DD" 
-                          value={field.value instanceof Date ? 
-                            field.value.toISOString().split('T')[0] : 
-                            String(field.value)}
+                          value={String(field.value)}
                           onChange={(e) => {
                             // Pass the date string directly to the form
                             field.onChange(e.target.value);
