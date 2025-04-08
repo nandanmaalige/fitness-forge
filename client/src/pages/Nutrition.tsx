@@ -88,12 +88,14 @@ export default function Nutrition() {
   // Create nutrition entry mutation
   const createEntryMutation = useMutation({
     mutationFn: async (data: NutritionFormData) => {
-      // Format the date as ISO string to ensure proper serialization
+      // Make sure userId is in the request
       const formattedData = {
         ...data,
+        userId: 1, // In a real app, this would come from auth context
         date: data.date.toISOString(),
       };
       
+      console.log("Submitting nutrition entry:", formattedData);
       const response = await apiRequest("POST", "/api/nutrition", formattedData);
       return response.json();
     },

@@ -34,14 +34,14 @@ export default function Sidebar({ currentPath }: SidebarProps) {
             return (
               <li key={item.path}>
                 <Link href={item.path}>
-                  <a className={`flex items-center p-2 rounded-lg ${
+                  <div className={`flex items-center p-2 rounded-lg cursor-pointer ${
                     isActive 
                       ? 'bg-blue-50 text-primary' 
                       : 'text-gray-600 hover:bg-gray-50'
                   }`}>
                     <IconComponent className="h-5 w-5 mr-3" />
                     {item.label}
-                  </a>
+                  </div>
                 </Link>
               </li>
             );

@@ -104,7 +104,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteWorkout(id: number): Promise<boolean> {
     const result = await db.delete(workouts).where(eq(workouts.id, id));
-    return result.rowCount > 0;
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Exercise methods
@@ -131,7 +131,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteExercise(id: number): Promise<boolean> {
     const result = await db.delete(exercises).where(eq(exercises.id, id));
-    return result.rowCount > 0;
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Goal methods
@@ -158,7 +158,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteGoal(id: number): Promise<boolean> {
     const result = await db.delete(goals).where(eq(goals.id, id));
-    return result.rowCount > 0;
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Nutrition methods
@@ -186,7 +186,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteNutritionEntry(id: number): Promise<boolean> {
     const result = await db.delete(nutritionEntries).where(eq(nutritionEntries.id, id));
-    return result.rowCount > 0;
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Activity Log methods
@@ -243,8 +243,8 @@ export class DatabaseStorage implements IStorage {
       password: "password123",
       displayName: "Alex Johnson",
       email: "alex@example.com",
-      weight: 165,
-      height: 72,
+      weight: "165",
+      height: "72",
       avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
     });
 
@@ -301,7 +301,7 @@ export class DatabaseStorage implements IStorage {
       name: "Bench Press", 
       sets: 3, 
       reps: 10, 
-      weight: 135
+      weight: "135"
     });
     
     await this.createExercise({ 
@@ -309,7 +309,7 @@ export class DatabaseStorage implements IStorage {
       name: "Shoulder Press", 
       sets: 3, 
       reps: 12, 
-      weight: 85
+      weight: "85"
     });
     
     await this.createExercise({ 
@@ -317,7 +317,7 @@ export class DatabaseStorage implements IStorage {
       name: "Bicep Curls", 
       sets: 3, 
       reps: 15, 
-      weight: 35
+      weight: "35"
     });
 
     // Create goals
@@ -326,8 +326,8 @@ export class DatabaseStorage implements IStorage {
       name: "Lose 5 lbs",
       description: "Weight loss goal",
       targetDate: new Date("2023-07-30"),
-      currentValue: 165,
-      targetValue: 160,
+      currentValue: "165",
+      targetValue: "160",
       unit: "lbs",
       status: "in-progress"
     });
@@ -337,8 +337,8 @@ export class DatabaseStorage implements IStorage {
       name: "Run 5K",
       description: "Running distance goal",
       targetDate: new Date("2023-08-15"),
-      currentValue: 3.2,
-      targetValue: 5,
+      currentValue: "3.2",
+      targetValue: "5",
       unit: "K",
       status: "in-progress"
     });
