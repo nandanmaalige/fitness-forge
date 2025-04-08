@@ -19,7 +19,20 @@ const validateRequest = (req: Request, schema: any) => {
     console.log("Request body before validation:", req.body);
     
     // Special handling for specific fields that need type conversion
-    let dataToValidate = req.body;
+    let dataToValidate = { ...req.body };
+    
+    // Handle date fields - convert string to Date object
+    if ('date' in dataToValidate && typeof dataToValidate.date === 'string') {
+      try {
+        // Convert ISO string to Date object
+        const dateObj = new Date(dataToValidate.date);
+        if (!isNaN(dateObj.getTime())) {
+          dataToValidate.date = dateObj;
+        }
+      } catch (err) {
+        console.error("Error parsing date:", err);
+      }
+    }
     
     // For nutrition entries, ensure data types match schema
     if ('protein' in dataToValidate || 'carbs' in dataToValidate || 'fat' in dataToValidate) {
