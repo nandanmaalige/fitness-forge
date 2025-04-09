@@ -68,6 +68,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { password: _, ...userWithoutPassword } = user;
     return res.status(200).json(userWithoutPassword);
   });
+  
+  app.put("/api/users/:id", async (req: Request, res: Response) => {
+    const userId = parseInt(req.params.id);
+    const user = await storage.getUser(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    // Update user, allow partial updates
+    const updatedUser = await storage.updateUser(userId, req.body);
+    
+    if (!updatedUser) {
+      return res.status(500).json({ message: "Failed to update user" });
+    }
+    
+    // Don't send the password back
+    const { password: _, ...userWithoutPassword } = updatedUser;
+    return res.status(200).json(userWithoutPassword);
+  });
 
   // Workout routes
   app.post("/api/workouts", async (req: Request, res: Response) => {
