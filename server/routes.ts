@@ -246,10 +246,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/:userId/activity-logs/today", async (req: Request, res: Response) => {
     const userId = parseInt(req.params.userId);
     const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-    const log = await storage.getActivityLogByUserIdAndDate(userId, today);
+    let log = await storage.getActivityLogByUserIdAndDate(userId, today);
     
     if (!log) {
-      return res.status(404).json({ message: "No activity log found for today" });
+      // Create a new activity log for today if one doesn't exist
+      try {
+        const newLog = {
+          userId,
+          date: today,
+          steps: 0,
+          caloriesBurned: 0,
+          activeMinutes: 0,
+          distance: 0,
+          workoutsCompleted: 0
+        };
+        log = await storage.createActivityLog(newLog);
+        return res.status(200).json(log);
+      } catch (error) {
+        console.error("Error creating activity log:", error);
+        return res.status(500).json({ message: "Failed to create activity log for today" });
+      }
     }
     
     return res.status(200).json(log);
