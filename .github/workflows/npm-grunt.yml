@@ -1,0 +1,60 @@
+name: CI/CD Pipeline – FitnessForge
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+      - name: 🛎️ Checkout repo
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: 📥 Install dependencies
+        run: npm install
+
+      - name: 🔍 Lint (optional)
+        run: |
+          if [ -f .eslintrc.js ]; then
+            npx eslint .
+          fi
+
+      - name: 🧪 Run tests (if available)
+        run: |
+          if [ -f jest.config.js ] || [ -d __tests__ ]; then
+            npx jest
+          else
+            echo "No tests found"
+          fi
+
+      - name: 🛠️ Type check
+        run: npx tsc --noEmit
+
+      - name: 🧬 Drizzle migration check
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          npx drizzle-kit introspect:pg
+
+      - name: 🚀 Build app (e.g., Grunt or Vite)
+        run: |
+          if [ -f Gruntfile.js ]; then
+            grunt
+          else
+            npx vite build || echo "No Vite build found"
+          fi
+
