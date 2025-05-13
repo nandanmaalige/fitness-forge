@@ -32,6 +32,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { float } from "drizzle-orm/mysql-core";
 
 export default function Goals() {
   const userId = 1; // In a real app, this would come from auth context
@@ -153,7 +154,7 @@ export default function Goals() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {goals.map(goal => {
-            const progress = (goal.currentValue / goal.targetValue) * 100;
+            const progress = ((Number(goal.currentValue) )/ (Number(goal.targetValue))) * 100;
             const formattedProgress = Math.round(progress);
             const isCompleted = goal.status === "completed";
             

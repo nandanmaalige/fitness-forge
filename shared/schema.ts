@@ -98,7 +98,7 @@ export const insertGoalSchema = createInsertSchema(goals)
     unit: true,
     status: true,
   });
-
+ 
 // Nutrition schema - changed date to text type
 export const nutritionEntries = pgTable("nutrition_entries", {
   id: serial("id").primaryKey(),
