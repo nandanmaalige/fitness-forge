@@ -148,7 +148,7 @@ export default function Profile() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <div className="flex items-center space-x-4">
           <Avatar className="h-20 w-20 border-2 border-gray-200">
-            <AvatarImage src={user.avatarUrl} alt={user.displayName} />
+           
             <AvatarFallback className="text-lg">{user.displayName.substring(0, 2)}</AvatarFallback>
           </Avatar>
           <div>
@@ -391,4 +391,3 @@ export default function Profile() {
     </div>
   );
 }
-

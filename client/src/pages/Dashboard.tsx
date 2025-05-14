@@ -11,7 +11,7 @@ export default function Dashboard() {
   
   return (
     <div>
-      <WelcomeSection name="Alex" />
+      <WelcomeSection name="Alex Johnson" />
       
       <SummaryMetrics userId={userId} />
       
